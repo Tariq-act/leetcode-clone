@@ -1,10 +1,24 @@
+import { useEffect } from 'react';
 import './App.css';
-import LandingPage from './components/LandingPage';
+
+// Import the functions you need from the SDKs you need
+import SignIn from './components/SignIn';
+import { onAuthStateChanged } from 'firebase/auth';
+import { auth } from './utils/firebase';
 
 function App() {
+  useEffect(() => {
+    onAuthStateChanged(auth, function (user) {
+      if (user) {
+        console.log('This is a user', user);
+      } else {
+        console.log('There is no logged user');
+      }
+    });
+  }, []);
   return (
     <>
-      <LandingPage />
+      <SignIn />
     </>
   );
 }
