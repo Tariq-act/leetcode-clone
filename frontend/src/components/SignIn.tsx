@@ -1,30 +1,45 @@
 /* eslint-disable @typescript-eslint/no-unused-vars */
-import { getAuth, sendSignInLinkToEmail } from 'firebase/auth';
+import {
+  UserCredential,
+  getAuth,
+  sendSignInLinkToEmail,
+  signInWithPopup,
+} from 'firebase/auth';
 import { useState } from 'react';
 import { app, auth } from '../utils/firebase';
+import { FirebaseError } from 'firebase/app';
 
-const actionCodeSettings = {
-  // URL you want to redirect back to. The domain (www.example.com) for this
-  // URL must be in the authorized domains list in the Firebase Console.
-  url: 'https://localhost:3000',
-  // This must be true.
-  handleCodeInApp: true,
-};
+import { GoogleAuthProvider } from 'firebase/auth';
 
+const provider = new GoogleAuthProvider();
 const SignIn = () => {
   const [email, setEmail] = useState('');
 
   async function onSignIn() {
-    sendSignInLinkToEmail(auth, email, actionCodeSettings)
-      .then(() => {
-        // The link was successfully sent. Inform the user.
-        // Save the email locally so you don't need to ask the user for it again
-        // if they open the link on the same device.
-        window.localStorage.setItem('emailForSignIn', email);
-        alert('sent email');
+    signInWithPopup(auth, provider)
+      .then((result: UserCredential) => {
+        // This gives you a Google Access Token. You can use it to access the Google API.
+        const credential = GoogleAuthProvider.credentialFromResult(result);
+        if (!credential) {
+          return;
+        }
+        const token = credential.accessToken;
+        // The signed-in user info.
+        const user = result.user;
+        // IdP data available using getAdditionalUserInfo(result)
         // ...
       })
-      .catch((error) => {
+      .catch((error: FirebaseError) => {
+        // Handle Errors here.
+        const errorCode = error.code;
+        const errorMessage = error.message;
+        // The email of the user's account used.
+        const email = error?.customData?.email;
+        // The AuthCredential type that was used.
+        const credential = GoogleAuthProvider.credentialFromError(error);
+        // ...
+      })
+      .catch((error: { code: unknown; message: unknown }) => {
         const errorCode = error.code;
         const errorMessage = error.message;
         // ...
@@ -33,14 +48,12 @@ const SignIn = () => {
 
   return (
     <div>
-      <input
-        type='text'
-        placeholder='email'
-        onChange={(e) => setEmail(e.target.value)}
-      />
-
-      <button type='submit' onClick={() => onSignIn()}>
-        Signup
+      <button
+        type='submit'
+        onClick={() => onSignIn()}
+        className='border shadow-md rounded-lg p-4'
+      >
+        Sign up with google
       </button>
     </div>
   );
